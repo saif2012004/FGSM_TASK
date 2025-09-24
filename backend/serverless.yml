@@ -1,0 +1,62 @@
+# Serverless Framework configuration for AWS deployment
+service: fgsm-adversarial-attack
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.9
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  timeout: 30
+  memorySize: 1024
+  
+  environment:
+    STAGE: ${self:provider.stage}
+    
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: '*'
+
+functions:
+  api:
+    handler: lambda_handler.lambda_handler
+    events:
+      - http:
+          path: /{proxy+}
+          method: ANY
+          cors: true
+      - http:
+          path: /
+          method: ANY
+          cors: true
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+    fileName: lambda_requirements.txt
+    layer:
+      name: ${self:provider.stage}-layer
+      description: Python requirements layer
+      compatibleRuntimes:
+        - python3.9
+      retain: false
+
+package:
+  exclude:
+    - node_modules/**
+    - .git/**
+    - .serverless/**
+    - requirements.txt
+    - train_demo_model.py
+    - __pycache__/**
+    - .pytest_cache/**
