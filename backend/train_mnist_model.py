@@ -24,7 +24,8 @@ def train_mnist_model(epochs=10, save_path='mnist_model_professional.pth'):
     Returns:
         Tuple of (model, best_accuracy)
     """
-    print("🚀 Starting MNIST Model Training")
+    print("=" * 70)
+    print("Starting MNIST Model Training")
     print("=" * 70)
     print(f"Training started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
@@ -46,7 +47,7 @@ def train_mnist_model(epochs=10, save_path='mnist_model_professional.pth'):
     ])
     
     # Load MNIST dataset
-    print("\n📦 Loading MNIST dataset...")
+    print("\nLoading MNIST dataset...")
     train_dataset = datasets.MNIST('./data', train=True, download=True, transform=transform_train)
     test_dataset = datasets.MNIST('./data', train=False, download=True, transform=transform_test)
     
@@ -59,7 +60,7 @@ def train_mnist_model(epochs=10, save_path='mnist_model_professional.pth'):
     print(f"Training batches: {len(train_loader)}")
     
     # Create model
-    print("\n🧠 Creating model...")
+    print("\nCreating model...")
     model = load_mnist_model().to(device)
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.7)
@@ -71,7 +72,7 @@ def train_mnist_model(epochs=10, save_path='mnist_model_professional.pth'):
     print(f"Trainable parameters: {trainable_params:,}")
     
     # Training loop
-    print("\n🏋️ Training model...")
+    print("\nTraining model...")
     print("-" * 70)
     best_accuracy = 0.0
     best_epoch = 0
@@ -124,7 +125,7 @@ def train_mnist_model(epochs=10, save_path='mnist_model_professional.pth'):
         
         # Print epoch summary
         print("-" * 70)
-        print(f'📊 Epoch {epoch+1}/{epochs} Summary:')
+        print(f'Epoch {epoch+1}/{epochs} Summary:')
         print(f'   Training   - Loss: {avg_train_loss:.4f} | Accuracy: {train_accuracy:.2f}%')
         print(f'   Validation - Loss: {test_loss:.4f} | Accuracy: {test_accuracy:.2f}%')
         
@@ -133,7 +134,7 @@ def train_mnist_model(epochs=10, save_path='mnist_model_professional.pth'):
             best_accuracy = test_accuracy
             best_epoch = epoch + 1
             torch.save(model.state_dict(), save_path)
-            print(f'   ✅ New best model saved! (Epoch {best_epoch}, Accuracy: {best_accuracy:.2f}%)')
+            print(f'   [BEST] New best model saved! (Epoch {best_epoch}, Accuracy: {best_accuracy:.2f}%)')
         
         print("-" * 70)
         
@@ -144,7 +145,7 @@ def train_mnist_model(epochs=10, save_path='mnist_model_professional.pth'):
     
     # Final results
     print("=" * 70)
-    print(f"🎉 Training Complete!")
+    print(f"Training Complete!")
     print(f"Best Epoch: {best_epoch}/{epochs}")
     print(f"Best Test Accuracy: {best_accuracy:.2f}%")
     print(f"Model saved to: {save_path}")
@@ -162,7 +163,7 @@ def test_model_on_samples(model_path='mnist_model_professional.pth', num_samples
         model_path: Path to saved model weights
         num_samples: Number of random samples to test
     """
-    print("\n🧪 Testing trained model on random samples...")
+    print("\nTesting trained model on random samples...")
     print("-" * 70)
     
     device = torch.device("cpu")
@@ -170,9 +171,9 @@ def test_model_on_samples(model_path='mnist_model_professional.pth', num_samples
     
     try:
         model.load_state_dict(torch.load(model_path, map_location=device))
-        print(f"✅ Model loaded successfully from {model_path}")
+        print(f"[OK] Model loaded successfully from {model_path}")
     except FileNotFoundError:
-        print(f"❌ Error: Model file not found at {model_path}")
+        print(f"[ERROR] Model file not found at {model_path}")
         return
     
     model.eval()
@@ -205,7 +206,7 @@ def test_model_on_samples(model_path='mnist_model_professional.pth', num_samples
             pred = output.argmax(dim=1).item()
             confidence = probabilities.max().item()
             
-            status = "✅" if pred == label else "❌"
+            status = "[OK]" if pred == label else "[FAIL]"
             print(f"{i:3d} | {label:5d} | {pred:5d} | {confidence:9.4f} | {status:>6}")
             
             predictions.append({
@@ -242,7 +243,7 @@ def test_model_on_samples(model_path='mnist_model_professional.pth', num_samples
                   f"{digit_stats[digit]['correct']:7d} | {acc:7.1f}%")
     
     print("-" * 50)
-    print("\n✅ Model testing complete!")
+    print("\n[DONE] Model testing complete!")
 
 
 def evaluate_model_robustness(model_path='mnist_model_professional.pth'):
@@ -252,7 +253,7 @@ def evaluate_model_robustness(model_path='mnist_model_professional.pth'):
     Args:
         model_path: Path to saved model weights
     """
-    print("\n🛡️ Evaluating model robustness against FGSM attacks...")
+    print("\nEvaluating model robustness against FGSM attacks...")
     print("-" * 70)
     
     from fgsm import Attack
@@ -332,7 +333,7 @@ def evaluate_model_robustness(model_path='mnist_model_professional.pth'):
         print(f"{epsilon:7.2f} | {accuracy:7.1f}% | {attack_rate:13.1f}% | {avg_conf:8.4f}")
     
     print("-" * 50)
-    print("\n✅ Robustness evaluation complete!")
+    print("\n[DONE] Robustness evaluation complete!")
     
     return results
 
@@ -357,11 +358,11 @@ if __name__ == "__main__":
     model, accuracy = train_mnist_model(epochs=epochs)
     
     if accuracy >= 95.0:
-        print("\n🎉 Excellent! Model achieved >95% accuracy!")
+        print("\n[SUCCESS] Excellent! Model achieved >95% accuracy!")
     elif accuracy >= 90.0:
-        print("\n👍 Good! Model achieved >90% accuracy!")
+        print("\n[GOOD] Good! Model achieved >90% accuracy!")
     else:
-        print("\n⚠️ Warning: Model accuracy is below 90%. Consider training for more epochs.")
+        print("\n[WARNING] Model accuracy is below 90%. Consider training for more epochs.")
     
     # Test the model
     test_model_on_samples()
@@ -370,6 +371,6 @@ if __name__ == "__main__":
     evaluate_model_robustness()
     
     print("\n" + "=" * 70)
-    print("✅ All done! You can now use this model with the FastAPI backend.")
-    print("   The model will be automatically loaded in app_fgsm.py")
+    print("[COMPLETE] All done! You can now use this model with the FastAPI backend.")
+    print("           The model will be automatically loaded in app_fgsm.py")
     print("=" * 70)
