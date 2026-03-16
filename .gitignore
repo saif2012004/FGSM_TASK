@@ -54,3 +54,7 @@ logs/
 # Temporary files
 *.tmp
 *.temp
+
+# Duplicate/backup files
+*_FGSM_AssessmentReport/
+*_FGSM_AssessmentReport*.zip

@@ -1,5 +1,10 @@
 # FGSM Adversarial Attack System
 
+[![CI/CD Pipeline](https://github.com/saif2012004/DevNeuron_FGSM_TASK-/actions/workflows/ci.yml/badge.svg)](https://github.com/saif2012004/DevNeuron_FGSM_TASK-/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Next.js 15](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
+
 A comprehensive implementation of Fast Gradient Sign Method (FGSM) adversarial attacks with a FastAPI backend and Next.js frontend, developed for the DevNeuron Software Engineer Intern Assessment.
 
 ## 📋 Table of Contents
@@ -67,21 +72,51 @@ This project demonstrates adversarial attacks on machine learning models using t
    cd backend
    ```
 
-2. **Install Python dependencies:**
+2. **Create and activate virtual environment (recommended):**
+
+   ```bash
+   # On Windows
+   python -m venv venv
+   venv\Scripts\activate
+
+   # On macOS/Linux
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+3. **Install Python dependencies:**
 
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Create demo model (for testing):**
+4. **Configure environment variables:**
 
    ```bash
-   python train_demo_model.py
+   # Copy example file and edit as needed
+   copy .env.example .env  # Windows
+   # or
+   cp .env.example .env    # macOS/Linux
    ```
 
-4. **Start the FastAPI server:**
+5. **Train the MNIST model:**
 
    ```bash
+   python train_mnist_model.py
+   ```
+
+   This will:
+   - Download the MNIST dataset (if not already present)
+   - Train a CNN model for 10 epochs
+   - Save the trained model as `mnist_model_professional.pth`
+   - Test the model and evaluate its robustness
+   - Expected accuracy: >95%
+
+6. **Start the FastAPI server:**
+
+   ```bash
+   python app_fgsm.py
+   # or
    uvicorn app_fgsm:app --host 0.0.0.0 --port 8000 --reload
    ```
 
@@ -102,7 +137,21 @@ This project demonstrates adversarial attacks on machine learning models using t
    npm install
    ```
 
-3. **Start the development server:**
+3. **Configure environment variables:**
+
+   ```bash
+   # Copy example file and edit as needed
+   copy .env.example .env.local  # Windows
+   # or
+   cp .env.example .env.local    # macOS/Linux
+   ```
+
+   Edit `.env.local` to set your backend URL:
+   ```env
+   NEXT_PUBLIC_API_URL=http://localhost:8000
+   ```
+
+4. **Start the development server:**
 
    ```bash
    npm run dev
@@ -118,7 +167,7 @@ This project demonstrates adversarial attacks on machine learning models using t
 
    ```bash
    cd backend
-   uvicorn app_fgsm:app --host 0.0.0.0 --port 8000 --reload
+   python app_fgsm.py
    ```
 
 2. **Terminal 2 - Frontend:**
@@ -135,14 +184,38 @@ This project demonstrates adversarial attacks on machine learning models using t
 
 ### Environment Configuration
 
-The frontend uses environment variables for API configuration:
+#### Backend Environment Variables
+
+The backend uses environment variables for configuration. Copy `.env.example` to `.env` and modify as needed:
 
 ```bash
-# frontend/.env.local
-NEXT_PUBLIC_API_URL=http://localhost:8000
+cd backend
+copy .env.example .env  # Windows
+# or
+cp .env.example .env    # macOS/Linux
 ```
 
-For production deployment, update this to your deployed backend URL.
+Available configuration options:
+- `HOST`: Server host (default: 0.0.0.0)
+- `PORT`: Server port (default: 8000)
+- `MODEL_PATH`: Path to trained model weights
+- `DEVICE`: Device to use (cpu or cuda)
+- `ALLOWED_ORIGINS`: CORS allowed origins (comma-separated)
+- `DEBUG`: Debug mode (true/false)
+- `LOG_LEVEL`: Logging level (INFO, DEBUG, WARNING, ERROR)
+
+#### Frontend Environment Variables
+
+The frontend uses Next.js environment variables. Copy `.env.example` to `.env.local`:
+
+```bash
+cd frontend
+copy .env.example .env.local  # Windows
+# or
+cp .env.example .env.local    # macOS/Linux
+```
+
+For production deployment, update `NEXT_PUBLIC_API_URL` to your deployed backend URL.
 
 ## 📡 API Documentation
 

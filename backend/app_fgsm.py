@@ -16,12 +16,42 @@ import base64
 import numpy as np
 from typing import Optional
 import logging
+import os
+from dotenv import load_dotenv
 
 from fgsm import Attack, load_mnist_model
 
+# Load environment variables
+load_dotenv()
+
+# Configuration from environment
+HOST = os.getenv("HOST", "0.0.0.0")
+PORT = int(os.getenv("PORT", "8000"))
+MODEL_PATH = os.getenv("MODEL_PATH", "mnist_model_professional.pth")
+DEVICE = os.getenv("DEVICE", "cpu")
+ALLOWED_ORIGINS_STR = os.getenv("ALLOWED_ORIGINS", "*")
+ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS_STR.split(",")] if ALLOWED_ORIGINS_STR != "*" else ["*"]
+DEBUG = os.getenv("DEBUG", "true").lower() == "true"
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
+
+# Log configuration
+logger.info("=" * 70)
+logger.info("FGSM Adversarial Attack API - Configuration")
+logger.info("=" * 70)
+logger.info(f"Host: {HOST}")
+logger.info(f"Port: {PORT}")
+logger.info(f"Model Path: {MODEL_PATH}")
+logger.info(f"Device: {DEVICE}")
+logger.info(f"Allowed Origins: {ALLOWED_ORIGINS}")
+logger.info(f"Debug Mode: {DEBUG}")
+logger.info("=" * 70)
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -33,11 +63,13 @@ app = FastAPI(
 # Add CORS middleware to allow frontend connections
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify exact origins
+    allow_origins=ALLOWED_ORIGINS,  # Configured from environment
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+logger.info(f"CORS configured with origins: {ALLOWED_ORIGINS}")
 
 # Response model
 class AttackResponse(BaseModel):
@@ -59,25 +91,27 @@ def initialize_model():
     global model, attack_instance, transform
     
     try:
-        # Try to load professional model first, fallback to demo model
-        try:
-            from train_proper_mnist_model import MNISTNet
-            model = MNISTNet()
-            model.load_state_dict(torch.load('mnist_model_professional.pth', map_location='cpu'))
-            logger.info("✅ Loaded professional MNIST model with real training")
-        except (FileNotFoundError, ImportError):
-            # Fallback to demo model
-            model = load_mnist_model()
-            try:
-                model.load_state_dict(torch.load('mnist_model.pth', map_location='cpu'))
-                logger.info("⚠️ Loaded demo model weights (run train_proper_mnist_model.py for better results)")
-            except FileNotFoundError:
-                logger.warning("❌ No model weights found, using random initialization")
+        # Load model architecture
+        model = load_mnist_model()
         
+        # Try to load model weights from configured path
+        try:
+            model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
+            logger.info(f"✅ Loaded model weights from {MODEL_PATH}")
+        except FileNotFoundError:
+            # Try fallback to older model name
+            try:
+                model.load_state_dict(torch.load('mnist_model.pth', map_location=DEVICE))
+                logger.info("✅ Loaded model weights from mnist_model.pth")
+            except FileNotFoundError:
+                logger.warning("⚠️ No model weights found! Using random initialization.")
+                logger.warning("   Run 'python train_mnist_model.py' to train a model.")
+        
+        model.to(DEVICE)
         model.eval()
         
         # Initialize attack
-        attack_instance = Attack(model, device='cpu')
+        attack_instance = Attack(model, device=DEVICE)
         
         # Define image preprocessing pipeline (professional MNIST preprocessing)
         transform = transforms.Compose([
@@ -87,10 +121,10 @@ def initialize_model():
             transforms.Normalize((0.1307,), (0.3081,))  # MNIST standard normalization
         ])
         
-        logger.info("Model and attack instance initialized successfully")
+        logger.info("✅ Model and attack instance initialized successfully")
         
     except Exception as e:
-        logger.error(f"Failed to initialize model: {str(e)}")
+        logger.error(f"❌ Failed to initialize model: {str(e)}")
         raise e
 
 # Initialize on startup
@@ -293,9 +327,12 @@ if __name__ == "__main__":
     import uvicorn
     
     # For local development
+    logger.info(f"Starting server on {HOST}:{PORT}")
+    logger.info(f"Reload: {DEBUG}")
+    
     uvicorn.run(
         "app_fgsm:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True
+        host=HOST,
+        port=PORT,
+        reload=DEBUG
     )
